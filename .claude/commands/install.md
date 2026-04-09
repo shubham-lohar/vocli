@@ -6,7 +6,14 @@ VOCLI's MCP server is already running. Now install the heavy dependencies (STT/T
 
 Walk through these steps one at a time, confirming each succeeds:
 
-## Step 1: Check Python version
+## Step 1: Find and save Python path
+Run this to find and save the Python path that will be used for everything:
+```bash
+python3 -c "import sys; print(sys.executable)"
+```
+Save this path — ALL pip installs and verification steps below must use this exact path. This will also be saved to config later as `python_path`.
+
+## Step 2: Check Python version
 Run `python3 --version` — needs 3.10 or higher.
 
 ## Step 2: Check ffmpeg
@@ -59,7 +66,7 @@ Ask the user:
 3. "Auto-approve voice tools?" (yes/no, recommend yes)
 4. "Enable task completion chime?" (yes/no)
 
-Save to `~/.vocli/config.json` including `whisper_model` and `whisper_compute_type`. If auto-approve enabled, add to `~/.claude/settings.json` permissions.allow:
+Save to `~/.vocli/config.json` including `whisper_model`, `whisper_compute_type`, and `python_path` (the path from Step 1). If auto-approve enabled, add to `~/.claude/settings.json` permissions.allow:
 - `mcp__plugin_vocli_vocli__talk`
 
 After each step, report success or troubleshoot errors.

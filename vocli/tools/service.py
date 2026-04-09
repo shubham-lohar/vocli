@@ -104,11 +104,14 @@ async def _start_server(server_type: str) -> str:
     safe_keys = {"PATH", "HOME", "USER", "LANG", "LC_ALL", "TMPDIR", "SHELL"}
     env = {k: v for k, v in os.environ.items() if k in safe_keys}
     env.update(env_vars)
+
     log_dir = cfg.VOCLI_DIR / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / f"{server_type}.log"
 
-    python = shutil.which("python3") or sys.executable
+    # Use the Python path saved during install (where deps are installed)
+    conf = cfg.get_config()
+    python = conf.get("python_path") or shutil.which("python3") or sys.executable
 
     with open(log_file, "a") as log:
         subprocess.Popen(
