@@ -54,23 +54,23 @@ fi
 echo "[OK] ffmpeg found"
 
 # --- Step 3: Install Python packages ---
-echo "[...] Installing faster-whisper and piper-tts..."
-python3 -m pip install -q faster-whisper piper-tts 2>/dev/null
+echo "[...] Installing faster-whisper and kokoro-onnx..."
+python3 -m pip install -q faster-whisper kokoro-onnx soundfile 2>/dev/null
 echo "[OK] Python packages installed"
 
 # --- Step 4: Create directories ---
-mkdir -p "$VOCLI_DIR/models/piper" "$VOCLI_DIR/models/whisper" "$VOCLI_DIR/logs"
+mkdir -p "$VOCLI_DIR/models/kokoro" "$VOCLI_DIR/models/whisper" "$VOCLI_DIR/logs"
 
-# --- Step 5: Download Piper model ---
-PIPER_MODEL="$VOCLI_DIR/models/piper/en_US-ryan-high.onnx"
-PIPER_CONFIG="$PIPER_MODEL.json"
-if [ ! -f "$PIPER_MODEL" ]; then
-    echo "[...] Downloading Piper voice model..."
-    curl -sL -o "$PIPER_MODEL" "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/high/en_US-ryan-high.onnx"
-    curl -sL -o "$PIPER_CONFIG" "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/high/en_US-ryan-high.onnx.json"
-    echo "[OK] Piper model downloaded"
+# --- Step 5: Download Kokoro model ---
+KOKORO_MODEL="$VOCLI_DIR/models/kokoro/kokoro-v1.0.onnx"
+KOKORO_VOICES="$VOCLI_DIR/models/kokoro/voices-v1.0.bin"
+if [ ! -f "$KOKORO_MODEL" ]; then
+    echo "[...] Downloading Kokoro voice model (~325MB)..."
+    curl -sL -o "$KOKORO_MODEL" "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx"
+    curl -sL -o "$KOKORO_VOICES" "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin"
+    echo "[OK] Kokoro model downloaded"
 else
-    echo "[OK] Piper model found"
+    echo "[OK] Kokoro model found"
 fi
 
 # --- Step 6: Pre-download Whisper model ---
@@ -122,7 +122,7 @@ WHISPER_PORT="$STT_PORT" WHISPER_MODEL="$WHISPER_MODEL" \
     python3 "$STT_SCRIPT" >> "$VOCLI_DIR/logs/stt.log" 2>&1 &
 STT_PID=$!
 
-TTS_PORT="$TTS_PORT" TTS_ENGINE="piper" PIPER_MODEL="$PIPER_MODEL" \
+TTS_PORT="$TTS_PORT" TTS_ENGINE="kokoro" KOKORO_MODEL="$KOKORO_MODEL" KOKORO_VOICES="$KOKORO_VOICES" \
     python3 "$TTS_SCRIPT" >> "$VOCLI_DIR/logs/tts.log" 2>&1 &
 TTS_PID=$!
 

@@ -14,12 +14,12 @@ Run `ffmpeg -version`. If missing: `brew install ffmpeg` (macOS) or `sudo apt in
 
 ## Step 3: Install STT and TTS engines
 ```bash
-python3 -m pip install faster-whisper piper-tts
+python3 -m pip install faster-whisper kokoro-onnx soundfile
 ```
 
 ## Step 4: Create VOCLI directories
 ```bash
-mkdir -p ~/.vocli/models/piper ~/.vocli/models/whisper ~/.vocli/logs
+mkdir -p ~/.vocli/models/kokoro ~/.vocli/models/piper ~/.vocli/models/whisper ~/.vocli/logs
 ```
 
 ## Step 5: Detect architecture
@@ -32,10 +32,10 @@ Tell the user what was detected (e.g., "Detected Apple Silicon (arm64) — will 
 Ask: "What speech recognition model size? `tiny` (fastest, less accurate) or `small` (default, good balance)?"
 Default to `small` if the user doesn't have a preference.
 
-## Step 7: Download Piper voice model
+## Step 7: Download Kokoro voice model
 ```bash
-curl -L -o ~/.vocli/models/piper/en_US-ryan-high.onnx "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/high/en_US-ryan-high.onnx"
-curl -L -o ~/.vocli/models/piper/en_US-ryan-high.onnx.json "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/high/en_US-ryan-high.onnx.json"
+curl -L -o ~/.vocli/models/kokoro/kokoro-v1.0.onnx "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx"
+curl -L -o ~/.vocli/models/kokoro/voices-v1.0.bin "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin"
 ```
 
 ## Step 8: Download Whisper model
@@ -47,8 +47,8 @@ python3 -c "from faster_whisper import WhisperModel; m = WhisperModel('<model>',
 ## Step 9: Verify
 ```bash
 python3 -c "import faster_whisper; print('faster-whisper OK')"
-which piper && echo "piper OK"
-ls ~/.vocli/models/piper/*.onnx && echo "Piper model OK"
+python3 -c "from kokoro_onnx import Kokoro; print('kokoro-onnx OK')"
+ls ~/.vocli/models/kokoro/kokoro-v1.0.onnx && echo "Kokoro model OK"
 ```
 
 ## Step 10: Configure VOCLI
@@ -65,5 +65,5 @@ Save to `~/.vocli/config.json` including `whisper_model` and `whisper_compute_ty
 After each step, report success or troubleshoot errors.
 
 ## IMPORTANT: When everything is done, say EXACTLY this and NOTHING else:
-"Setup complete! Default voice: **Ryan (high quality, US English)**. Run `/vocli:talk` to start a voice conversation!"
+"Setup complete! Voice engine: **Kokoro** (high quality). Run `/vocli:talk` to start a voice conversation! If voice feels slow, run `/vocli:config` and switch to `piper` for faster performance."
 Do NOT summarize settings, do NOT list STT/TTS details, do NOT say "you're all set". Just the message above.

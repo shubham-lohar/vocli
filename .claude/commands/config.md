@@ -7,7 +7,34 @@ First, check if VOCLI is already configured:
 cat ~/.vocli/config.json 2>/dev/null || echo "NOT_CONFIGURED"
 ```
 
-**If already configured:** Show current settings and ask what the user wants to change. Only update the specific setting they request — don't re-run the full setup.
+**If already configured:** Show current settings and ask what the user wants to change. Only update the specific setting they request — don't re-run the full setup. Users can switch TTS engine by setting `tts_engine` to `kokoro` (natural, high quality) or `piper` (fast, lightweight).
+
+### When user switches TTS engine:
+**If switching to `piper`:** Check if piper is installed and model exists:
+```bash
+which piper && ls ~/.vocli/models/piper/en_US-ryan-high.onnx 2>/dev/null && echo "PIPER_READY" || echo "PIPER_MISSING"
+```
+If `PIPER_MISSING`, install it:
+```bash
+python3 -m pip install piper-tts
+mkdir -p ~/.vocli/models/piper
+curl -L -o ~/.vocli/models/piper/en_US-ryan-high.onnx "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/high/en_US-ryan-high.onnx"
+curl -L -o ~/.vocli/models/piper/en_US-ryan-high.onnx.json "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/high/en_US-ryan-high.onnx.json"
+```
+
+**If switching to `kokoro`:** Check if kokoro-onnx is installed and model exists:
+```bash
+python3 -c "import kokoro_onnx" 2>/dev/null && ls ~/.vocli/models/kokoro/kokoro-v1.0.onnx 2>/dev/null && echo "KOKORO_READY" || echo "KOKORO_MISSING"
+```
+If `KOKORO_MISSING`, install it:
+```bash
+python3 -m pip install kokoro-onnx soundfile
+mkdir -p ~/.vocli/models/kokoro
+curl -L -o ~/.vocli/models/kokoro/kokoro-v1.0.onnx "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx"
+curl -L -o ~/.vocli/models/kokoro/voices-v1.0.bin "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin"
+```
+
+After installing, save `tts_engine` to config.json and restart the TTS server.
 
 **If first time (NOT_CONFIGURED):** Ask these questions one at a time, waiting for each answer:
 

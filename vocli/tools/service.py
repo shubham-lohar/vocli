@@ -90,6 +90,8 @@ async def _start_server(server_type: str) -> str:
             "TTS_PORT": str(port),
             "TTS_ENGINE": cfg.TTS_ENGINE,
             "PIPER_MODEL": cfg.PIPER_MODEL,
+            "KOKORO_MODEL": cfg.KOKORO_MODEL,
+            "KOKORO_VOICES": cfg.KOKORO_VOICES,
         }
 
     if not script:

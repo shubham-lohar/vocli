@@ -29,8 +29,8 @@ MIN_RECORDING_DURATION = float(os.environ.get("VOCLI_MIN_RECORDING", "0.5"))
 
 # TTS defaults
 TTS_SPEED = float(os.environ.get("VOCLI_TTS_SPEED", "0.9"))
-TTS_VOICE = os.environ.get("VOCLI_TTS_VOICE", "alloy")
-TTS_ENGINE = os.environ.get("VOCLI_TTS_ENGINE", "piper")
+TTS_VOICE = os.environ.get("VOCLI_TTS_VOICE", "af_heart")
+TTS_ENGINE = os.environ.get("VOCLI_TTS_ENGINE", "kokoro")
 
 # STT defaults
 WHISPER_MODEL = os.environ.get("VOCLI_WHISPER_MODEL", "small")
@@ -54,6 +54,16 @@ SERVER_MODE = "local"
 PIPER_MODEL = os.environ.get(
     "VOCLI_PIPER_MODEL",
     str(VOCLI_DIR / "models" / "piper" / "en_US-ryan-high.onnx"),
+)
+
+# Kokoro model paths
+KOKORO_MODEL = os.environ.get(
+    "VOCLI_KOKORO_MODEL",
+    str(VOCLI_DIR / "models" / "kokoro" / "kokoro-v1.0.onnx"),
+)
+KOKORO_VOICES = os.environ.get(
+    "VOCLI_KOKORO_VOICES",
+    str(VOCLI_DIR / "models" / "kokoro" / "voices-v1.0.bin"),
 )
 
 # Config file
@@ -90,7 +100,7 @@ ALLOWED_SERVER_MODES = {"local", "remote"}
 
 def load_runtime_config() -> None:
     """Patch module globals from config.json. Env vars take precedence."""
-    global STT_URL, TTS_URL, SERVER_MODE, WHISPER_MODEL, WHISPER_COMPUTE_TYPE
+    global STT_URL, TTS_URL, SERVER_MODE, WHISPER_MODEL, WHISPER_COMPUTE_TYPE, TTS_ENGINE
     c = get_config()
     mode = c.get("server_mode", "local")
     if mode in ALLOWED_SERVER_MODES:
@@ -111,6 +121,10 @@ def load_runtime_config() -> None:
         ct = c["whisper_compute_type"]
         if ct in ALLOWED_COMPUTE_TYPES:
             WHISPER_COMPUTE_TYPE = ct
+    if "VOCLI_TTS_ENGINE" not in os.environ and "tts_engine" in c:
+        engine = c["tts_engine"]
+        if engine in {"kokoro", "piper", "say"}:
+            TTS_ENGINE = engine
 
 
 load_runtime_config()

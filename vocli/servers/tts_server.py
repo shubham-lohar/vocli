@@ -1,5 +1,6 @@
-"""OpenAI-compatible TTS server with switchable engines: piper or say."""
+"""OpenAI-compatible TTS server with switchable engines: kokoro, piper, or say."""
 
+import io
 import json
 import os
 import subprocess
@@ -7,7 +8,7 @@ import sys
 import tempfile
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-ENGINE = os.environ.get("TTS_ENGINE", "piper")
+ENGINE = os.environ.get("TTS_ENGINE", "kokoro")
 PORT = int(os.environ.get("TTS_PORT", "8880"))
 BIND_HOST = os.environ.get("VOCLI_BIND_HOST", "127.0.0.1")
 MAX_TEXT_LENGTH = 5000  # Max characters for TTS input
@@ -17,6 +18,16 @@ PIPER_MODEL = os.environ.get(
     "PIPER_MODEL",
     os.path.expanduser("~/.vocli/models/piper/en_US-ryan-high.onnx"),
 )
+KOKORO_MODEL = os.environ.get(
+    "KOKORO_MODEL",
+    os.path.expanduser("~/.vocli/models/kokoro/kokoro-v1.0.onnx"),
+)
+KOKORO_VOICES = os.environ.get(
+    "KOKORO_VOICES",
+    os.path.expanduser("~/.vocli/models/kokoro/voices-v1.0.bin"),
+)
+
+_kokoro = None
 
 SAY_VOICE_MAP = {
     "alloy": "Samantha",
@@ -77,6 +88,34 @@ def synth_piper(text, voice, speed=1.0):
             pass
 
 
+def get_kokoro():
+    """Lazy-load Kokoro model."""
+    global _kokoro
+    if _kokoro is None:
+        from kokoro_onnx import Kokoro
+        print(f"[vocli-tts] Loading Kokoro model...")
+        _kokoro = Kokoro(KOKORO_MODEL, KOKORO_VOICES)
+        print(f"[vocli-tts] Kokoro loaded.")
+    return _kokoro
+
+
+def synth_kokoro(text, voice, speed=1.0):
+    """Generate audio using Kokoro ONNX TTS."""
+    import numpy as np
+    kokoro = get_kokoro()
+    samples, sample_rate = kokoro.create(text, voice=voice, speed=speed, lang="en-us")
+    # Convert float samples to 16-bit PCM WAV
+    buf = io.BytesIO()
+    import wave
+    pcm = (samples * 32767).astype(np.int16)
+    with wave.open(buf, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sample_rate)
+        wf.writeframes(pcm.tobytes())
+    return buf.getvalue()
+
+
 class TTSHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path in ("/v1/audio/speech", "/audio/speech"):
@@ -107,12 +146,14 @@ class TTSHandler(BaseHTTPRequestHandler):
                 self._respond(400, {"error": "Speed must be between 0.1 and 5.0"})
                 return
 
-            if ENGINE == "piper":
+            if ENGINE == "kokoro":
+                data = synth_kokoro(text, voice, speed)
+            elif ENGINE == "piper":
                 data = synth_piper(text, voice, speed)
             elif ENGINE == "say" and sys.platform == "darwin":
                 data = synth_say(text, voice)
             else:
-                self._respond(500, {"error": f"Engine '{ENGINE}' not available on this platform. Use piper."})
+                self._respond(500, {"error": f"Engine '{ENGINE}' not available on this platform. Use kokoro or piper."})
                 return
 
             if data:
@@ -149,9 +190,18 @@ class TTSHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     if ENGINE == "say" and sys.platform != "darwin":
-        print("[vocli-tts] WARNING: 'say' engine only works on macOS. Falling back to piper.")
-        ENGINE = "piper"
-    if ENGINE == "piper":
+        print("[vocli-tts] WARNING: 'say' engine only works on macOS. Falling back to kokoro.")
+        ENGINE = "kokoro"
+    if ENGINE == "kokoro":
+        if not os.path.isfile(KOKORO_MODEL):
+            print(f"[vocli-tts] ERROR: Kokoro model not found: {KOKORO_MODEL}")
+            sys.exit(1)
+        if not os.path.isfile(KOKORO_VOICES):
+            print(f"[vocli-tts] ERROR: Kokoro voices not found: {KOKORO_VOICES}")
+            sys.exit(1)
+        print(f"[vocli-tts] Model: {KOKORO_MODEL}")
+        get_kokoro()  # Preload model
+    elif ENGINE == "piper":
         if not PIPER_MODEL.endswith(".onnx"):
             print(f"[vocli-tts] ERROR: Model path must be an .onnx file, got: {PIPER_MODEL}")
             sys.exit(1)
