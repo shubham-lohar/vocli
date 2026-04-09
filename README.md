@@ -92,7 +92,7 @@ The `/vocli:install` wizard handles everything:
 
 ---
 
-## Remote Mode
+## Remote Install
 
 For running Claude Code on a **remote VM** while keeping voice on your local machine.
 
