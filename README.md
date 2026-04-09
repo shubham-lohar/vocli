@@ -1,8 +1,8 @@
 <p align="center">
   <h1 align="center">VOCLI</h1>
-  <p align="center">
+  <!-- <p align="center">
     <strong>Local voice layer for Claude Code</strong>
-  </p>
+  </p> -->
   <p align="center">
     Talk to Claude Code with your voice.
   </p>
