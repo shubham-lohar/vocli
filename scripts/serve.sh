@@ -84,7 +84,8 @@ else
     COMPUTE_TYPE="int8"
 fi
 
-python3 -c "from faster_whisper import WhisperModel; WhisperModel('$WHISPER_MODEL', compute_type='$COMPUTE_TYPE'); print('[OK] Whisper model ready ($COMPUTE_TYPE)')"
+WHISPER_MODEL="$WHISPER_MODEL" VOCLI_WHISPER_COMPUTE_TYPE="$COMPUTE_TYPE" \
+    python3 -c "import os; from faster_whisper import WhisperModel; m=os.environ['WHISPER_MODEL']; ct=os.environ['VOCLI_WHISPER_COMPUTE_TYPE']; WhisperModel(m, compute_type=ct); print(f'[OK] Whisper model ready ({ct})')"
 
 # --- Step 7: Detect local IP ---
 if [[ "$OSTYPE" == "darwin"* ]]; then

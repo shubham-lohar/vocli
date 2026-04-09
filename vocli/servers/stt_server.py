@@ -11,6 +11,10 @@ BIND_HOST = os.environ.get("VOCLI_BIND_HOST", "127.0.0.1")
 MODEL = os.environ.get("WHISPER_MODEL", "small")
 LANGUAGE = os.environ.get("WHISPER_LANGUAGE", "en")
 COMPUTE_TYPE = os.environ.get("VOCLI_WHISPER_COMPUTE_TYPE", "int8")
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10MB max audio upload
+
+ALLOWED_MODELS = {"tiny", "base", "small", "medium", "large-v2", "large-v3"}
+ALLOWED_COMPUTE_TYPES = {"int8", "float16", "float32"}
 
 _model = None
 
@@ -67,6 +71,10 @@ def parse_multipart(handler):
 class STTHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path in ("/v1/audio/transcriptions", "/audio/transcriptions"):
+            content_length = int(self.headers.get("Content-Length", 0))
+            if content_length > MAX_UPLOAD_BYTES:
+                self._respond(413, {"error": f"Upload too large (max {MAX_UPLOAD_BYTES // 1024 // 1024}MB)"})
+                return
             fields, file_data = parse_multipart(self)
             if not file_data:
                 self._respond(400, {"error": "No audio file provided"})
@@ -104,7 +112,8 @@ class STTHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/plain")
             self.end_headers()
             self.wfile.write(b"ok")
-        elif self.path in ("/v1/models", "/models"):
+            return
+        if self.path in ("/v1/models", "/models"):
             self._respond(200, {
                 "data": [{"id": "whisper-1", "object": "model"}],
                 "object": "list",
@@ -123,6 +132,12 @@ class STTHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    if MODEL not in ALLOWED_MODELS:
+        print(f"[vocli-stt] ERROR: Invalid model '{MODEL}'. Allowed: {', '.join(sorted(ALLOWED_MODELS))}")
+        import sys; sys.exit(1)
+    if COMPUTE_TYPE not in ALLOWED_COMPUTE_TYPES:
+        print(f"[vocli-stt] ERROR: Invalid compute_type '{COMPUTE_TYPE}'. Allowed: {', '.join(sorted(ALLOWED_COMPUTE_TYPES))}")
+        import sys; sys.exit(1)
     print(f"[vocli-stt] Starting on {BIND_HOST}:{PORT}, model={MODEL}, compute={COMPUTE_TYPE}")
     get_model()
     server = HTTPServer((BIND_HOST, PORT), STTHandler)

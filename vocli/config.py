@@ -83,19 +83,34 @@ def update_config(**kwargs) -> dict:
     return config
 
 
+ALLOWED_WHISPER_MODELS = {"tiny", "base", "small", "medium", "large-v2", "large-v3"}
+ALLOWED_COMPUTE_TYPES = {"int8", "float16", "float32"}
+ALLOWED_SERVER_MODES = {"local", "remote"}
+
+
 def load_runtime_config() -> None:
     """Patch module globals from config.json. Env vars take precedence."""
     global STT_URL, TTS_URL, SERVER_MODE, WHISPER_MODEL, WHISPER_COMPUTE_TYPE
     c = get_config()
-    SERVER_MODE = c.get("server_mode", "local")
+    mode = c.get("server_mode", "local")
+    if mode in ALLOWED_SERVER_MODES:
+        SERVER_MODE = mode
     if "VOCLI_STT_URL" not in os.environ and "stt_url" in c:
-        STT_URL = c["stt_url"]
+        url = c["stt_url"]
+        if isinstance(url, str) and url.startswith("http"):
+            STT_URL = url
     if "VOCLI_TTS_URL" not in os.environ and "tts_url" in c:
-        TTS_URL = c["tts_url"]
+        url = c["tts_url"]
+        if isinstance(url, str) and url.startswith("http"):
+            TTS_URL = url
     if "VOCLI_WHISPER_MODEL" not in os.environ and "whisper_model" in c:
-        WHISPER_MODEL = c["whisper_model"]
+        model = c["whisper_model"]
+        if model in ALLOWED_WHISPER_MODELS:
+            WHISPER_MODEL = model
     if "VOCLI_WHISPER_COMPUTE_TYPE" not in os.environ and "whisper_compute_type" in c:
-        WHISPER_COMPUTE_TYPE = c["whisper_compute_type"]
+        ct = c["whisper_compute_type"]
+        if ct in ALLOWED_COMPUTE_TYPES:
+            WHISPER_COMPUTE_TYPE = ct
 
 
 load_runtime_config()

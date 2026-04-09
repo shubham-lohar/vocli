@@ -98,7 +98,10 @@ async def _start_server(server_type: str) -> str:
     if await _server_healthy(server_type):
         return f"{server_type.upper()}: already running on port {port}"
 
-    env = {**os.environ, **env_vars}
+    # Only pass necessary env vars to child process, not secrets
+    safe_keys = {"PATH", "HOME", "USER", "LANG", "LC_ALL", "TMPDIR", "SHELL"}
+    env = {k: v for k, v in os.environ.items() if k in safe_keys}
+    env.update(env_vars)
     log_dir = cfg.VOCLI_DIR / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / f"{server_type}.log"
@@ -145,11 +148,21 @@ async def _stop_server(server_type: str) -> str:
             )
             pids = result.stdout.strip().split()
 
-        if not pids:
+        # Validate PIDs are numeric
+        valid_pids = []
+        for p in pids:
+            try:
+                pid_int = int(p)
+                if pid_int > 0:
+                    valid_pids.append(pid_int)
+            except ValueError:
+                continue
+
+        if not valid_pids:
             return f"{server_type.upper()}: not running"
-        for pid in pids:
-            os.kill(int(pid), signal.SIGTERM)
-        return f"{server_type.upper()}: stopped (pid {', '.join(pids)})"
+        for pid in valid_pids:
+            os.kill(pid, signal.SIGTERM)
+        return f"{server_type.upper()}: stopped (pid {', '.join(str(p) for p in valid_pids)})"
     except FileNotFoundError:
         return f"{server_type.upper()}: could not find process (lsof/fuser not available)"
     except Exception as e:

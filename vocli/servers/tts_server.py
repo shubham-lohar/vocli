@@ -10,6 +10,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 ENGINE = os.environ.get("TTS_ENGINE", "piper")
 PORT = int(os.environ.get("TTS_PORT", "8880"))
 BIND_HOST = os.environ.get("VOCLI_BIND_HOST", "127.0.0.1")
+MAX_TEXT_LENGTH = 5000  # Max characters for TTS input
+MAX_BODY_BYTES = 64 * 1024  # 64KB max request body
 SAY_VOICE = os.environ.get("SAY_VOICE", "Reed (English (US))")
 PIPER_MODEL = os.environ.get(
     "PIPER_MODEL",
@@ -79,10 +81,31 @@ class TTSHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path in ("/v1/audio/speech", "/audio/speech"):
             length = int(self.headers.get("Content-Length", 0))
-            body = json.loads(self.rfile.read(length)) if length else {}
+            if length > MAX_BODY_BYTES:
+                self._respond(413, {"error": f"Request too large (max {MAX_BODY_BYTES // 1024}KB)"})
+                return
+
+            try:
+                body = json.loads(self.rfile.read(length)) if length else {}
+            except (json.JSONDecodeError, ValueError):
+                self._respond(400, {"error": "Invalid JSON"})
+                return
+
             text = body.get("input", "")
+            if len(text) > MAX_TEXT_LENGTH:
+                self._respond(400, {"error": f"Text too long (max {MAX_TEXT_LENGTH} chars)"})
+                return
+
             voice = body.get("voice", "alloy")
-            speed = float(body.get("speed", 0.9))
+
+            try:
+                speed = float(body.get("speed", 0.9))
+            except (ValueError, TypeError):
+                self._respond(400, {"error": "Invalid speed value"})
+                return
+            if speed <= 0 or speed > 5.0:
+                self._respond(400, {"error": "Speed must be between 0.1 and 5.0"})
+                return
 
             if ENGINE == "piper":
                 data = synth_piper(text, voice, speed)
@@ -128,9 +151,15 @@ if __name__ == "__main__":
     if ENGINE == "say" and sys.platform != "darwin":
         print("[vocli-tts] WARNING: 'say' engine only works on macOS. Falling back to piper.")
         ENGINE = "piper"
-    print(f"[vocli-tts] Starting on {BIND_HOST}:{PORT}, engine={ENGINE}")
     if ENGINE == "piper":
+        if not PIPER_MODEL.endswith(".onnx"):
+            print(f"[vocli-tts] ERROR: Model path must be an .onnx file, got: {PIPER_MODEL}")
+            sys.exit(1)
+        if not os.path.isfile(PIPER_MODEL):
+            print(f"[vocli-tts] ERROR: Model file not found: {PIPER_MODEL}")
+            sys.exit(1)
         print(f"[vocli-tts] Model: {PIPER_MODEL}")
+    print(f"[vocli-tts] Starting on {BIND_HOST}:{PORT}, engine={ENGINE}")
     server = HTTPServer((BIND_HOST, PORT), TTSHandler)
     print(f"[vocli-tts] Ready at http://{BIND_HOST}:{PORT}")
     server.serve_forever()
