@@ -57,9 +57,7 @@ Installation done! Now proceed directly to configuration — ask the user:
 4. "Enable task completion chime?" (yes/no)
 
 Save to `~/.vocli/config.json` and add vocli tools to `~/.claude/settings.json` permissions.allow if auto-approve is enabled:
-- `mcp__vocli__talk`
-- `mcp__vocli__status`
-- `mcp__vocli__service`
+- `mcp__plugin_vocli_vocli__talk`
 
 STT and TTS servers start automatically when they use `/vocli:talk` — no manual step needed.
 

@@ -60,8 +60,6 @@ with open(config_dir / "config.json", "w") as f:
 ```
 
 If auto-approve is enabled, add vocli tools to the allow list in `~/.claude/settings.json` under `permissions.allow`:
-- `mcp__vocli__talk`
-- `mcp__vocli__status`
-- `mcp__vocli__service`
+- `mcp__plugin_vocli_vocli__talk`
 
 Confirm setup is complete. STT and TTS servers start automatically when they use `/vocli:talk` — no manual step needed."""
