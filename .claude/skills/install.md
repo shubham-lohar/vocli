@@ -55,6 +55,7 @@ Save to `~/.vocli/config.json`. If auto-approve enabled, add to `~/.claude/setti
 After each step, report success or troubleshoot errors.
 
 ## Done!
-When everything is configured, tell the user:
+When everything is configured, tell the user EXACTLY this and nothing else:
 - The default voice is **Northern English Male (medium)**.
-- **Say `/vocli:talk` to start talking!**
+- **Run `/vocli:talk` to start a voice conversation!**
+Do NOT say anything like "just say the word" or "you're all set". The user MUST run the `/vocli:talk` command to begin.
