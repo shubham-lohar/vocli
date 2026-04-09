@@ -1,11 +1,21 @@
 {
   "name": "vocli",
-  "description": "VOCLI — Local voice layer for AI coding tools",
+  "metadata": {
+    "description": "VOCLI — Local voice layer for AI coding tools",
+    "version": "1.0.0"
+  },
+  "owner": {
+    "name": "Shubham Lohar",
+    "email": "shubham.lohar2799@gmail.com"
+  },
   "plugins": [
     {
       "name": "vocli",
       "description": "Local, privacy-first voice assistant for Claude Code. Talk to Claude, Claude talks back. 100% offline.",
-      "author": "shubham",
+      "author": {
+        "name": "Shubham Lohar",
+        "email": "shubham.lohar2799@gmail.com"
+      },
       "source": "./",
       "category": "voice",
       "homepage": "https://github.com/shubham-lohar/vocli"
