@@ -154,31 +154,6 @@ VOCLI runs as an MCP server with three tools:
 
 ---
 
-## Architecture
-
-```
-+-----------------------------------+
-|        VOCLI MCP Server           |
-|     (FastMCP, stdio transport)    |
-|                                   |
-|   Tools: talk, status, service    |
-+--------+--------------+----------+
-         |              |
-   +-----v------+ +-----v------+
-   | STT Server | | TTS Server |
-   | port 2022  | | port 8880  |
-   | faster-    | | Piper TTS  |
-   | whisper    | |            |
-   +------------+ +------------+
-         |              |
-     [local or remote servers]
-```
-
-**Local mode:** Servers run on the same machine as Claude Code.
-**Remote mode:** Servers run on your local machine; Claude Code connects over the network.
-
----
-
 ## Requirements
 
 | Requirement | Details |
