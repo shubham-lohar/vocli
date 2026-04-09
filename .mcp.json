@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "vocli": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "vocli"]
+    }
+  }
+}

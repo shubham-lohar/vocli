@@ -1,0 +1,11 @@
+{
+  "name": "vocli",
+  "version": "0.1.0",
+  "description": "Local, privacy-first voice assistant for Claude Code",
+  "author": "shubham",
+  "commands": "./.claude/commands/",
+  "skills": "./.claude/skills/",
+  "hooks": [
+    "vocli/data/hooks.json"
+  ]
+}

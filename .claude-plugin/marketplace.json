@@ -1,0 +1,14 @@
+{
+  "name": "vocli",
+  "description": "VOCLI — Local voice layer for AI coding tools",
+  "plugins": [
+    {
+      "name": "vocli",
+      "description": "Local, privacy-first voice assistant for Claude Code. Talk to Claude, Claude talks back. 100% offline.",
+      "author": "shubham",
+      "source": "./",
+      "category": "voice",
+      "homepage": "https://github.com/shubham-lohar/vocli"
+    }
+  ]
+}

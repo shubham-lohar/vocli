@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__vocli_talk",
+        "hooks": [{"type": "command", "command": "echo allow"}]
+      },
+      {
+        "matcher": "mcp__vocli_status",
+        "hooks": [{"type": "command", "command": "echo allow"}]
+      },
+      {
+        "matcher": "mcp__vocli_service",
+        "hooks": [{"type": "command", "command": "echo allow"}]
+      }
+    ]
+  }
+}
