@@ -2,10 +2,11 @@
   "name": "vocli",
   "version": "0.1.0",
   "description": "Local, privacy-first voice assistant for Claude Code",
-  "author": "shubham",
+  "author": {
+    "name": "Shubham Lohar",
+    "email": "shubham.lohar2799@gmail.com"
+  },
   "commands": "./.claude/commands/",
   "skills": "./.claude/skills/",
-  "hooks": [
-    "vocli/data/hooks.json"
-  ]
+  "hooks": "vocli/data/hooks.json"
 }
