@@ -9,7 +9,7 @@ You are setting up VOCLI in **remote mode** — the STT and TTS servers run on t
 Show them this command to run on their **local machine** (Mac or Linux with audio):
 
 ```
-curl -sL https://raw.githubusercontent.com/shubham-lohar/vocli/main/scripts/serve.sh | bash
+curl -sL https://raw.githubusercontent.com/voCLI/voCLI/main/scripts/serve.sh | bash
 ```
 
 Or if they have the repo cloned locally:

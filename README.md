@@ -6,7 +6,7 @@
   <p align="center">
     <a href="#-quick-start"><img src="https://img.shields.io/badge/Get_Started-blue?style=for-the-badge" alt="Get Started"></a>
     <a href="#-remote-mode"><img src="https://img.shields.io/badge/Remote_Mode-purple?style=for-the-badge" alt="Remote Mode"></a>
-    <a href="https://github.com/shubham-lohar/vocli/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License"></a>
+    <a href="https://github.com/voCLI/voCLI/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License"></a>
   </p>
 </p>
 
@@ -43,7 +43,7 @@ The easiest way to install voCLI:
 
 ```bash
 # Step 1: Add the marketplace
-/plugin marketplace add shubham-lohar/vocli
+/plugin marketplace add voCLI/voCLI
 
 # Step 2: Install the plugin
 /plugin install vocli@vocli
