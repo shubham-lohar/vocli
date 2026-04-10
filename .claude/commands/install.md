@@ -61,9 +61,11 @@ ls ~/.vocli/models/kokoro/kokoro-v1.0.onnx && echo "Kokoro model OK"
 ## Step 11: Configure VOCLI
 Ask the user:
 
-1. "What should I be called?" (assistant name, e.g., "Jarvis", "Nova")
+1. "What should I be called?" (assistant name, e.g., "Friday", "Jarvis")
 2. "What should I call you?" (user name)
 3. "Auto-approve voice tools?" (yes/no, recommend yes)
+
+Note: The default voice is **female (Sarah)**. Tell the user: "You can change the voice anytime — run `/vocli:config` and ask to change voice. There are 54 voices to choose from (male, female, American, British, and more)."
 
 Save to `~/.vocli/config.json` including `whisper_model`, `whisper_compute_type`, and `python_path` (the path from Step 1). If auto-approve enabled, add to `~/.claude/settings.json` permissions.allow:
 - `mcp__plugin_vocli_vocli__talk`

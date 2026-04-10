@@ -36,9 +36,21 @@ curl -L -o ~/.vocli/models/kokoro/voices-v1.0.bin "https://github.com/thewh1teag
 
 After installing, save `tts_engine` to config.json and restart the TTS server.
 
+### When user wants to change voice:
+**Kokoro engine (default):** Show available voices and let them pick:
+
+- **American Female:** af_alloy, af_aoede, af_bella, af_heart, af_jessica, af_kore, af_nicole, af_nova, af_river, af_sarah (default), af_sky
+- **American Male:** am_adam, am_echo, am_eric, am_fenrir, am_liam, am_michael, am_onyx, am_puck
+- **British Female:** bf_alice, bf_emma, bf_isabella, bf_lily
+- **British Male:** bm_daniel, bm_fable, bm_george, bm_lewis
+
+Save the chosen voice as `tts_voice` in config.json. The change takes effect on the next `talk` call — no restart needed.
+
+**Piper engine:** Only one voice is installed (Ryan). To use a different Piper voice, the user would need to download a different model from https://rhasspy.github.io/piper-samples/.
+
 **If first time (NOT_CONFIGURED):** Ask these questions one at a time, waiting for each answer:
 
-1. **"What should I be called?"** — Assistant name (e.g., "Jarvis", "Nova", "Friday")
+1. **"What should I be called?"** — Assistant name (e.g., "Friday", "Jarvis")
 2. **"What should I call you?"** — User's name (e.g., "Boss", "Chief")
 3. **"Auto-approve voice tools?"** — Recommend yes. No permission prompts during voice. (yes/no)
 4. **"Enable task completion chime?"** — Sound when Claude finishes a task. (yes/no)
