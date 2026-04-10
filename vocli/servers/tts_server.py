@@ -104,7 +104,8 @@ def synth_kokoro(text, voice, speed=1.0):
     import numpy as np
     kokoro = get_kokoro()
     samples, sample_rate = kokoro.create(text, voice=voice, speed=speed, lang="en-us")
-    # Convert float samples to 16-bit PCM WAV
+    # Clamp to [-1, 1] to prevent clipping noise, then convert to 16-bit PCM WAV
+    samples = np.clip(samples, -1.0, 1.0)
     buf = io.BytesIO()
     import wave
     pcm = (samples * 32767).astype(np.int16)
