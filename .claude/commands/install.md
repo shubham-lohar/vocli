@@ -74,5 +74,5 @@ Save to `~/.vocli/config.json` including `whisper_model`, `whisper_compute_type`
 After each step, report success or troubleshoot errors.
 
 ## IMPORTANT: When everything is done, say EXACTLY this and NOTHING else:
-"Setup complete! Voice engine: **Kokoro** (high quality). Run `/vocli:talk` to start a voice conversation! If voice feels slow, run `/vocli:config` and switch to `piper` for faster performance."
+"Setup complete! Voice engine: **Kokoro** (high quality). Just type **let's talk** or run `/vocli:talk` to start a voice conversation! If voice feels slow, run `/vocli:config` and switch to `piper` for faster performance."
 Do NOT summarize settings, do NOT list STT/TTS details, do NOT say "you're all set". Just the message above.
