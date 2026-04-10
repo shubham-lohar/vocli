@@ -1,7 +1,7 @@
 <p align="center">
   <img width="300" height="300" alt="vocli-logo" src="https://github.com/user-attachments/assets/d1b0a22b-e74c-4a1d-8606-5fa46c1945e7" alt="voCLI (voice + CLI)"> 
   <p align="center">
-    Talk to Claude Code with your voice.
+    Don't just type to your AI coding tool. Talk to it.
   </p>
   <p align="center">
     <a href="#-quick-start"><img src="https://img.shields.io/badge/Get_Started-blue?style=for-the-badge" alt="Get Started"></a>
