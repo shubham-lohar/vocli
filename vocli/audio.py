@@ -2,7 +2,6 @@
 
 import asyncio
 import io
-import struct
 import time
 
 import numpy as np

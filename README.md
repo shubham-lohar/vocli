@@ -23,7 +23,7 @@ VOCLI adds a **voice layer** to Claude Code. Everything runs locally on your mac
 
 ```
 You speak --> Mic --> faster-whisper (STT) --> Text to Claude
-Claude responds --> Piper TTS --> Audio plays through speakers
+Claude responds --> Kokoro TTS --> Audio plays through speakers
 ```
 
 ### Highlights
@@ -82,8 +82,8 @@ The `/vocli:install` wizard handles everything:
 | Step | What happens |
 |------|-------------|
 | 1 | Checks Python 3.10+ and ffmpeg |
-| 2 | Installs `faster-whisper` and `piper-tts` |
-| 3 | Downloads voice model (~100MB) and Whisper model (~500MB) |
+| 2 | Installs `faster-whisper` and `kokoro-onnx` |
+| 3 | Downloads Kokoro voice model (~325MB) and Whisper model (~500MB) |
 | 4 | Detects your CPU architecture (Apple Silicon / Intel / ARM) |
 | 5 | Lets you choose model size (`tiny` for speed, `small` for accuracy) |
 | 6 | Asks for your name, assistant name, and preferences |
@@ -160,7 +160,7 @@ VOCLI runs as an MCP server with three tools:
 |-------------|---------|
 | Python | 3.10 or higher |
 | OS | macOS (Apple Silicon or Intel) or Linux |
-| Disk space | ~700MB for models |
+| Disk space | ~900MB for models |
 | Audio | Microphone + speakers |
 
 ---

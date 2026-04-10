@@ -1,5 +1,9 @@
 """Talk tool — voice conversation with TTS playback and STT transcription."""
 
+import asyncio
+import json
+import sys
+
 from vocli.server import mcp
 
 
@@ -16,7 +20,7 @@ async def talk(
         message: Text to speak aloud via TTS.
         wait_for_response: If True, listen for user's voice reply after speaking.
         speed: TTS speech speed (default 0.9). Lower is slower.
-        voice: TTS voice name (default "alloy").
+        voice: TTS voice name (default "af_heart").
 
     Returns:
         If wait_for_response: the transcribed user speech.
@@ -31,8 +35,8 @@ async def talk(
     if not conf.get("assistant_name"):
         return "VOCLI is not configured yet. Run /vocli:config to set up your assistant name and preferences."
 
-    speed = speed or conf.get("tts_speed", cfg.TTS_SPEED)
-    voice = voice or conf.get("tts_voice", cfg.TTS_VOICE)
+    speed = speed if speed is not None else conf.get("tts_speed", cfg.TTS_SPEED)
+    voice = voice if voice is not None else conf.get("tts_voice", cfg.TTS_VOICE)
 
     # Auto-start servers if not running, restart TTS if engine changed
     tts_ok, tts_info = await check_tts_health()
@@ -41,23 +45,27 @@ async def talk(
     # Check if TTS engine matches config — restart if mismatched
     if tts_ok and cfg.SERVER_MODE == "local":
         try:
-            import json as _json
-            health = _json.loads(tts_info)
+            health = json.loads(tts_info)
             running_engine = health.get("engine", "")
             if running_engine != cfg.TTS_ENGINE:
                 from vocli.tools.service import _stop_server, _start_server
-                import asyncio
                 await _stop_server("tts")
                 await asyncio.sleep(1)
                 await _start_server("tts")
-                # Wait for new server
                 for _ in range(12):
                     await asyncio.sleep(5)
-                    tts_ok, _ = await check_tts_health()
+                    tts_ok, tts_info = await check_tts_health()
                     if tts_ok:
-                        break
+                        # Confirm new engine is correct
+                        try:
+                            new_health = json.loads(tts_info)
+                            if new_health.get("engine") == cfg.TTS_ENGINE:
+                                break
+                        except (ValueError, KeyError):
+                            break
         except (ValueError, KeyError):
             pass
+
     if not tts_ok or not stt_ok:
         if cfg.SERVER_MODE == "remote":
             unreachable = []
@@ -72,9 +80,7 @@ async def talk(
             await _start_server("tts")
         if not stt_ok:
             await _start_server("stt")
-        # Wait for startup (STT loads whisper model, can take a while)
-        import asyncio
-        for i in range(12):  # up to ~60 seconds
+        for _ in range(12):
             await asyncio.sleep(5)
             tts_ok, _ = await check_tts_health()
             stt_ok, _ = await check_stt_health()
@@ -84,11 +90,9 @@ async def talk(
         if not tts_ok or not stt_ok:
             errors = []
             if not tts_ok:
-                log_hint = _check_server_log("tts")
-                errors.append(f"TTS server failed to start. {log_hint}")
+                errors.append(f"TTS server failed to start. {_check_server_log('tts')}")
             if not stt_ok:
-                log_hint = _check_server_log("stt")
-                errors.append(f"STT server failed to start. {log_hint}")
+                errors.append(f"STT server failed to start. {_check_server_log('stt')}")
             return "Servers could not start.\n" + "\n".join(errors) + "\n\nRun /vocli:install to fix, or ask Claude to help troubleshoot."
 
     # 1. Synthesize and play the message
@@ -108,12 +112,14 @@ async def talk(
     try:
         audio_bytes = await record_audio()
     except Exception as e:
-        import sys as _sys
-        if _sys.platform == "darwin":
+        if sys.platform == "darwin":
             hint = "Check microphone access in System Settings > Privacy & Security > Microphone."
         else:
             hint = "Check that your microphone is connected and accessible (run: arecord -l to list devices)."
         return f"Recording error: {e}. {hint}"
+
+    if not audio_bytes:
+        return "No audio detected. Check your microphone connection."
 
     # 4. Transcribe
     try:
@@ -123,12 +129,13 @@ async def talk(
 
     # 5. Wait phrase detection — pause and re-listen instead of returning
     if _is_wait_phrase(text):
-        import asyncio
         wait_duration = conf.get("wait_duration", 30)
         await asyncio.sleep(wait_duration)
         await play_chime()
         try:
             audio_bytes = await record_audio()
+            if not audio_bytes:
+                return "No audio detected after wait."
             text = await transcribe(audio_bytes)
         except Exception as e:
             return f"Error after wait: {e}"
@@ -148,45 +155,6 @@ def _is_wait_phrase(text: str) -> bool:
     """Check if transcribed text is a wait/pause phrase."""
     cleaned = text.strip().lower().rstrip(".!,?")
     return cleaned in WAIT_PHRASES
-
-
-def _check_engines_installed() -> str | None:
-    """Check if required engines (faster-whisper, piper) are installed.
-    Checks the system python3 (where servers run), not the MCP server's Python.
-    Returns an error message if something is missing, None if all good."""
-    import shutil
-    import subprocess
-
-    missing = []
-
-    # Check faster-whisper in the system python3 (where STT server runs)
-    python = shutil.which("python3")
-    if python:
-        result = subprocess.run(
-            [python, "-c", "import faster_whisper"],
-            capture_output=True, timeout=10,
-        )
-        if result.returncode != 0:
-            missing.append("faster-whisper (speech-to-text)")
-    else:
-        missing.append("python3 not found on PATH")
-
-    if not shutil.which("piper"):
-        missing.append("piper-tts (text-to-speech)")
-
-    if not shutil.which("ffmpeg"):
-        missing.append("ffmpeg (audio processing)")
-
-    from vocli import config as cfg
-    from pathlib import Path
-    if not Path(cfg.PIPER_MODEL).exists():
-        missing.append("Piper voice model")
-
-    if missing:
-        items = "\n".join(f"  - {m}" for m in missing)
-        return f"Missing dependencies:\n{items}\n\nRun /vocli:install to set everything up."
-
-    return None
 
 
 def _check_server_log(server_type: str) -> str:

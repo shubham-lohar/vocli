@@ -38,7 +38,10 @@ def parse_multipart(handler):
     if "multipart/form-data" not in content_type:
         return {}, None
 
-    boundary = content_type.split("boundary=")[1].strip()
+    parts_ct = content_type.split("boundary=")
+    if len(parts_ct) < 2:
+        return {}, None
+    boundary = parts_ct[1].strip()
     parts = body.split(f"--{boundary}".encode())
 
     fields = {}
@@ -91,7 +94,7 @@ class STTHandler(BaseHTTPRequestHandler):
 
             try:
                 m = get_model()
-                segments, info = m.transcribe(tmp_path, language=lang)
+                segments, _ = m.transcribe(tmp_path, language=lang)
                 text = " ".join(s.text for s in segments).strip()
 
                 if response_format == "text":

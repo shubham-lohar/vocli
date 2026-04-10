@@ -34,7 +34,7 @@ async def status() -> str:
         lines.append(f"Assistant name: {conf['assistant_name']}")
         lines.append(f"User name: {conf.get('user_name', 'not set')}")
     else:
-        lines.append("Config: not initialized. Run /vocli:init")
+        lines.append("Config: not initialized. Run /vocli:config")
 
     # Hooks
     hooks = conf.get("hooks", {})

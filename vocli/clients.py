@@ -61,8 +61,8 @@ async def synthesize(text: str, voice: str | None = None, speed: float | None = 
     Returns:
         WAV audio bytes.
     """
-    voice = voice or cfg.TTS_VOICE
-    speed = speed or cfg.TTS_SPEED
+    voice = voice if voice is not None else cfg.TTS_VOICE
+    speed = speed if speed is not None else cfg.TTS_SPEED
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(
             f"{cfg.TTS_URL}/v1/audio/speech",

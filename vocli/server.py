@@ -2,7 +2,6 @@
 
 import sys
 import os
-from pathlib import Path
 
 from fastmcp import FastMCP
 

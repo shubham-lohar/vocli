@@ -131,6 +131,9 @@ class TTSHandler(BaseHTTPRequestHandler):
                 return
 
             text = body.get("input", "")
+            if not text.strip():
+                self._respond(400, {"error": "Input text is required"})
+                return
             if len(text) > MAX_TEXT_LENGTH:
                 self._respond(400, {"error": f"Text too long (max {MAX_TEXT_LENGTH} chars)"})
                 return
@@ -146,14 +149,18 @@ class TTSHandler(BaseHTTPRequestHandler):
                 self._respond(400, {"error": "Speed must be between 0.1 and 5.0"})
                 return
 
-            if ENGINE == "kokoro":
-                data = synth_kokoro(text, voice, speed)
-            elif ENGINE == "piper":
-                data = synth_piper(text, voice, speed)
-            elif ENGINE == "say" and sys.platform == "darwin":
-                data = synth_say(text, voice)
-            else:
-                self._respond(500, {"error": f"Engine '{ENGINE}' not available on this platform. Use kokoro or piper."})
+            try:
+                if ENGINE == "kokoro":
+                    data = synth_kokoro(text, voice, speed)
+                elif ENGINE == "piper":
+                    data = synth_piper(text, voice, speed)
+                elif ENGINE == "say" and sys.platform == "darwin":
+                    data = synth_say(text, voice)
+                else:
+                    self._respond(500, {"error": f"Engine '{ENGINE}' not available on this platform. Use kokoro or piper."})
+                    return
+            except Exception as e:
+                self._respond(500, {"error": f"TTS synthesis error: {e}"})
                 return
 
             if data:
