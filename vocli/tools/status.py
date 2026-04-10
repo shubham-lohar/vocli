@@ -36,9 +36,20 @@ async def status() -> str:
     else:
         lines.append("Config: not initialized. Run /vocli:config")
 
+    # Audio devices
+    try:
+        import sounddevice as sd
+        default_in = sd.query_devices(kind='input')
+        default_out = sd.query_devices(kind='output')
+        configured_in = conf.get("input_device", "default")
+        configured_out = conf.get("output_device", "default")
+        lines.append(f"Input device: {default_in['name']} (configured: {configured_in})")
+        lines.append(f"Output device: {default_out['name']} (configured: {configured_out})")
+    except Exception:
+        lines.append("Audio devices: unable to query")
+
     # Hooks
     hooks = conf.get("hooks", {})
     lines.append(f"Auto-approve tools: {'enabled' if hooks.get('auto_approve') else 'disabled'}")
-    lines.append(f"Notification chime: {'enabled' if hooks.get('notify_chime') else 'disabled'}")
 
     return "\n".join(lines)

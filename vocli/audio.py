@@ -11,8 +11,26 @@ from scipy.io import wavfile
 from vocli import config as cfg
 
 
+def _get_output_device():
+    """Get configured output device, or None for default."""
+    conf = cfg.get_config()
+    device = conf.get("output_device")
+    if device and device != "default":
+        return device
+    return None
+
+
+def _get_input_device():
+    """Get configured input device, or None for default."""
+    conf = cfg.get_config()
+    device = conf.get("input_device")
+    if device and device != "default":
+        return device
+    return None
+
+
 async def play_audio(wav_bytes: bytes) -> None:
-    """Play WAV audio through the default output device."""
+    """Play WAV audio through the configured output device."""
 
     def _play():
         buf = io.BytesIO(wav_bytes)
@@ -22,7 +40,7 @@ async def play_audio(wav_bytes: bytes) -> None:
             data = data.astype(np.float32) / 32768.0
         elif data.dtype == np.int32:
             data = data.astype(np.float32) / 2147483648.0
-        sd.play(data, samplerate=sample_rate)
+        sd.play(data, samplerate=sample_rate, device=_get_output_device())
         sd.wait()
 
     await asyncio.to_thread(_play)
@@ -41,7 +59,7 @@ async def play_chime() -> None:
         wave[:fade_len] *= np.linspace(0, 1, fade_len)
         wave[-fade_len:] *= np.linspace(1, 0, fade_len)
         wave *= 0.3  # Low volume
-        sd.play(wave, samplerate=cfg.SAMPLE_RATE)
+        sd.play(wave, samplerate=cfg.SAMPLE_RATE, device=_get_output_device())
         sd.wait()
 
     await asyncio.to_thread(_chime)
@@ -87,6 +105,7 @@ async def record_audio(
             dtype="int16",
             blocksize=frame_samples,
             callback=callback,
+            device=_get_input_device(),
         ):
             while (time.time() - start_time) < max_dur:
                 time.sleep(frame_duration_ms / 1000)

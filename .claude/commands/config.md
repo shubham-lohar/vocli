@@ -48,6 +48,21 @@ Save the chosen voice as `tts_voice` in config.json. The change takes effect on 
 
 **Piper engine:** Only one voice is installed (Ryan). To use a different Piper voice, the user would need to download a different model from https://rhasspy.github.io/piper-samples/.
 
+### When user wants to change audio devices:
+List available devices by running:
+```bash
+python3 -c "
+import sounddevice as sd
+for i, d in enumerate(sd.query_devices()):
+    io = []
+    if d['max_input_channels'] > 0: io.append('IN')
+    if d['max_output_channels'] > 0: io.append('OUT')
+    print(f'  [{i}] {d[\"name\"]} ({\", \".join(io)})')
+"
+```
+Show the list and let the user pick an input device (mic) and output device (speakers/headphones).
+Save as `input_device` and `output_device` in config.json. Use the device name (not index). Set to `"default"` to use system default.
+
 **If first time (NOT_CONFIGURED):** Ask these questions one at a time, waiting for each answer:
 
 1. **"What should I be called?"** — Assistant name (e.g., "Friday", "Jarvis")
