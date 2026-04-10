@@ -15,3 +15,6 @@ When the user starts a voice conversation using `/vocli:talk` or the `talk` MCP 
 ## Resuming voice mode
 - If the user says "let's talk", "voice mode", "talk to me", or anything similar, call the `talk` tool immediately.
 - If there is prior conversation context, pick up where you left off — do not start with a fresh greeting.
+
+## Before long tasks
+- If you are about to enter plan mode, run agents, or do any complex multi-step work that might interrupt voice, speak "This might take a bit. If voice drops, just run /vocli:talk to resume" with `wait_for_response=False` before starting.
