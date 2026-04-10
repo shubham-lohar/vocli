@@ -121,7 +121,33 @@ async def talk(
     except Exception as e:
         return f"STT error: {e}"
 
+    # 5. Wait phrase detection — pause and re-listen instead of returning
+    if _is_wait_phrase(text):
+        import asyncio
+        wait_duration = conf.get("wait_duration", 30)
+        await asyncio.sleep(wait_duration)
+        await play_chime()
+        try:
+            audio_bytes = await record_audio()
+            text = await transcribe(audio_bytes)
+        except Exception as e:
+            return f"Error after wait: {e}"
+
     return text
+
+
+WAIT_PHRASES = {
+    "hang on", "hold on", "one sec", "one second", "give me a sec",
+    "give me a second", "give me a moment", "just a moment", "just a sec",
+    "wait", "wait a moment", "wait a sec", "wait a second",
+    "one moment", "one minute", "brb",
+}
+
+
+def _is_wait_phrase(text: str) -> bool:
+    """Check if transcribed text is a wait/pause phrase."""
+    cleaned = text.strip().lower().rstrip(".!,?")
+    return cleaned in WAIT_PHRASES
 
 
 def _check_engines_installed() -> str | None:
