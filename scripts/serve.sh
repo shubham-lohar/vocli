@@ -90,20 +90,24 @@ else
     [ -z "$LOCAL_IP" ] && LOCAL_IP="127.0.0.1"
 fi
 
-# --- Step 8: Find server scripts ---
+# --- Step 8: Find or download server scripts ---
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 STT_SCRIPT="$REPO_DIR/vocli/servers/stt_server.py"
 TTS_SCRIPT="$REPO_DIR/vocli/servers/tts_server.py"
 
 if [ ! -f "$STT_SCRIPT" ] || [ ! -f "$TTS_SCRIPT" ]; then
-    # Try pip-installed location
-    STT_SCRIPT=$(python3 -c "from pathlib import Path; import vocli; print(Path(vocli.__file__).parent / 'servers' / 'stt_server.py')" 2>/dev/null)
-    TTS_SCRIPT=$(python3 -c "from pathlib import Path; import vocli; print(Path(vocli.__file__).parent / 'servers' / 'tts_server.py')" 2>/dev/null)
-    if [ ! -f "$STT_SCRIPT" ] || [ ! -f "$TTS_SCRIPT" ]; then
-        echo "[ERROR] Could not find server scripts. Make sure you're running from the vocli repo or have vocli installed."
+    echo "[...] Downloading server scripts..."
+    mkdir -p "$VOCLI_DIR/servers"
+    curl -sL -o "$VOCLI_DIR/servers/stt_server.py" "https://raw.githubusercontent.com/voCLI/voCLI/main/vocli/servers/stt_server.py"
+    curl -sL -o "$VOCLI_DIR/servers/tts_server.py" "https://raw.githubusercontent.com/voCLI/voCLI/main/vocli/servers/tts_server.py"
+    STT_SCRIPT="$VOCLI_DIR/servers/stt_server.py"
+    TTS_SCRIPT="$VOCLI_DIR/servers/tts_server.py"
+    if [ ! -s "$STT_SCRIPT" ] || [ ! -s "$TTS_SCRIPT" ]; then
+        echo "[ERROR] Failed to download server scripts."
         exit 1
     fi
+    echo "[OK] Server scripts downloaded"
 fi
 
 # --- Step 9: Start servers ---
