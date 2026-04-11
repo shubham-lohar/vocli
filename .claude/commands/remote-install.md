@@ -70,5 +70,6 @@ If auto-approve enabled, add to `~/.claude/settings.json` permissions.allow:
 - `mcp__plugin_vocli_vocli__talk`
 - `mcp__plugin_vocli_vocli__status`
 
-## IMPORTANT: When done, say EXACTLY:
-"Remote setup complete! Run `/vocli:talk` to start a voice conversation."
+## IMPORTANT: When done, say EXACTLY this and NOTHING else:
+"Remote setup complete! Just type **let's talk** or run `/vocli:talk` to start a voice conversation! You can change the voice anytime — run `/vocli:config` and ask to change voice. There are 54 voices to choose from."
+Do NOT summarize settings, do NOT list STT/TTS details, do NOT say "you're all set". Just the message above.

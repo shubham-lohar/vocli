@@ -68,7 +68,6 @@ Save as `input_device` and `output_device` in config.json. Use the device name (
 1. **"What should I be called?"** — Assistant name (e.g., "Friday", "Jarvis")
 2. **"What should I call you?"** — User's name (e.g., "Boss", "Chief")
 3. **"Auto-approve voice tools?"** — Recommend yes. No permission prompts during voice. (yes/no)
-4. **"Enable task completion chime?"** — Sound when Claude finishes a task. (yes/no)
 
 Save config:
 ```bash
@@ -78,7 +77,7 @@ from pathlib import Path
 config = {
     'assistant_name': '<answer>',
     'user_name': '<answer>',
-    'hooks': {'auto_approve': True, 'notify_chime': True}
+    'hooks': {'auto_approve': True}
 }
 config_dir = Path.home() / '.vocli'
 config_dir.mkdir(parents=True, exist_ok=True)
