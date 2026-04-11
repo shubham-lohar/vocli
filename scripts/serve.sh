@@ -76,13 +76,8 @@ fi
 # --- Step 6: Pre-download Whisper model ---
 echo "[...] Loading Whisper model '$WHISPER_MODEL' (this may take a moment)..."
 
-# Detect compute type
-ARCH=$(uname -m)
-if [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
-    COMPUTE_TYPE="float16"
-else
-    COMPUTE_TYPE="int8"
-fi
+# Detect compute type — int8 is safest for CPU on all platforms
+COMPUTE_TYPE="int8"
 
 WHISPER_MODEL="$WHISPER_MODEL" VOCLI_WHISPER_COMPUTE_TYPE="$COMPUTE_TYPE" \
     python3 -c "import os; from faster_whisper import WhisperModel; m=os.environ['WHISPER_MODEL']; ct=os.environ['VOCLI_WHISPER_COMPUTE_TYPE']; WhisperModel(m, compute_type=ct); print(f'[OK] Whisper model ready ({ct})')"

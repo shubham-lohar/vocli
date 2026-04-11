@@ -38,10 +38,7 @@ WHISPER_LANGUAGE = os.environ.get("VOCLI_WHISPER_LANGUAGE", "en")
 
 
 def detect_compute_type() -> str:
-    """Auto-detect optimal whisper compute_type based on CPU architecture."""
-    machine = platform.machine().lower()
-    if machine in ("arm64", "aarch64"):
-        return "float16"
+    """Auto-detect optimal whisper compute_type. int8 is safest for CPU on all platforms."""
     return "int8"
 
 
