@@ -2,7 +2,7 @@
 description: Install VOCLI dependencies and configure
 ---
 
-This command sets up everything VOCLI needs: the `uv` package manager (for running the MCP server), Python engines for STT/TTS, voice models, and user config. The MCP server itself runs via `uvx vocli serve`, which requires `uv` to be installed on the machine.
+This command sets up everything VOCLI needs: the `uv` package manager, a dedicated isolated Python venv for STT/TTS engines, voice models, and user config. The MCP server itself runs via `uvx vocli serve`. The STT/TTS engines live in an isolated venv at `~/.vocli/venv` so they never touch the user's system Python — no pollution, no conflicts with other projects.
 
 Walk through these steps one at a time, confirming each succeeds. If any step installs something new that affects the MCP server (notably `uv`), note that the user will need to restart Claude Code at the end for the MCP server to connect.
 
@@ -13,59 +13,58 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 Then re-check with `uv --version`. If it still fails, tell the user to open a new terminal or source their shell profile (e.g. `source ~/.zshrc` or `source ~/.bashrc`) and retry. **Remember whether `uv` was freshly installed in this step — you will need to tell the user to restart Claude Code at the end if so, otherwise the MCP server won't pick it up.**
 
-## Step 2: Find and save Python path
-Run this to find and save the Python path that will be used for STT/TTS engines:
-```bash
-python3 -c "import sys; print(sys.executable)"
-```
-Save this path — ALL pip installs and verification steps below must use this exact path. This will also be saved to config later as `python_path`. Note: this Python is **separate** from the one that runs the MCP server (which runs via `uvx`). Its only job is to host `faster-whisper` and `kokoro-onnx` for the STT/TTS subprocesses.
-
-## Step 3: Check Python version
-Run `python3 --version` — needs 3.10 or higher.
-
-## Step 4: Check ffmpeg
+## Step 2: Check ffmpeg
 Run `ffmpeg -version`. If missing: `brew install ffmpeg` (macOS) or `sudo apt install ffmpeg` (Linux).
 
-## Step 5: Install STT and TTS engines
-```bash
-python3 -m pip install faster-whisper kokoro-onnx soundfile
-```
-
-## Step 6: Create VOCLI directories
+## Step 3: Create VOCLI directories
 ```bash
 mkdir -p ~/.vocli/models/kokoro ~/.vocli/models/piper ~/.vocli/models/whisper ~/.vocli/logs
 ```
 
-## Step 7: Detect architecture
+## Step 4: Create the isolated STT/TTS venv
+Create a dedicated Python environment at `~/.vocli/venv`. This venv hosts `faster-whisper` and `kokoro-onnx` in isolation — no impact on the user's system Python.
 ```bash
-python3 -c "import platform; m=platform.machine(); ct='float16' if m in ('arm64','aarch64') else 'int8'; print(f'{m}|{ct}')"
+uv venv ~/.vocli/venv --python 3.12
+```
+If `--python 3.12` fails because uv can't find or download it, retry without the version pin (`uv venv ~/.vocli/venv`) and uv will pick a suitable available Python. Save the venv's Python path — it's `~/.vocli/venv/bin/python` on macOS/Linux. This path becomes `python_path` in config later.
+
+## Step 5: Install STT and TTS engines into the venv
+```bash
+uv pip install --python ~/.vocli/venv/bin/python faster-whisper kokoro-onnx soundfile
+```
+This installs into the isolated venv, not the user's system Python.
+
+## Step 6: Detect architecture
+```bash
+~/.vocli/venv/bin/python -c "import platform; m=platform.machine(); ct='float16' if m in ('arm64','aarch64') else 'int8'; print(f'{m}|{ct}')"
 ```
 Tell the user what was detected (e.g., "Detected Apple Silicon (arm64) — will use float16 for faster performance" or "Detected Intel (x86_64) — using int8").
 
-## Step 8: Choose Whisper model size
+## Step 7: Choose Whisper model size
 Ask: "What speech recognition model size? `tiny` (fastest, less accurate) or `small` (default, good balance)?"
 Default to `small` if the user doesn't have a preference.
 
-## Step 9: Download Kokoro voice model
+## Step 8: Download Kokoro voice model
 ```bash
 curl -L -o ~/.vocli/models/kokoro/kokoro-v1.0.onnx "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx"
 curl -L -o ~/.vocli/models/kokoro/voices-v1.0.bin "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin"
 ```
 
-## Step 10: Download Whisper model
-Use the chosen model and detected compute type:
+## Step 9: Download Whisper model
+Use the chosen model and detected compute type, running via the venv Python:
 ```bash
-python3 -c "from faster_whisper import WhisperModel; m = WhisperModel('<model>', compute_type='<compute_type>'); print('Whisper model ready')"
+~/.vocli/venv/bin/python -c "from faster_whisper import WhisperModel; m = WhisperModel('<model>', compute_type='<compute_type>'); print('Whisper model ready')"
 ```
 
-## Step 11: Verify
+## Step 10: Verify
+All verification must use the venv Python:
 ```bash
-python3 -c "import faster_whisper; print('faster-whisper OK')"
-python3 -c "from kokoro_onnx import Kokoro; print('kokoro-onnx OK')"
+~/.vocli/venv/bin/python -c "import faster_whisper; print('faster-whisper OK')"
+~/.vocli/venv/bin/python -c "from kokoro_onnx import Kokoro; print('kokoro-onnx OK')"
 ls ~/.vocli/models/kokoro/kokoro-v1.0.onnx && echo "Kokoro model OK"
 ```
 
-## Step 12: Configure VOCLI
+## Step 11: Configure VOCLI
 Ask the user:
 
 1. "What should I be called?" (assistant name, e.g., "Friday", "Jarvis")
@@ -74,7 +73,7 @@ Ask the user:
 
 Note: The default voice is **female (Sarah)**. Tell the user: "You can change the voice anytime — run `/vocli:config` and ask to change voice. There are 54 voices to choose from (male, female, American, British, and more)."
 
-Save to `~/.vocli/config.json` including `whisper_model`, `whisper_compute_type`, and `python_path` (the path from Step 1). If auto-approve enabled, add to `~/.claude/settings.json` permissions.allow:
+Save to `~/.vocli/config.json` including `whisper_model`, `whisper_compute_type`, and `python_path`. **`python_path` must be the absolute path to the venv Python**, e.g. `/Users/<name>/.vocli/venv/bin/python` — expand `~` to the real home directory when writing the config. If auto-approve enabled, add to `~/.claude/settings.json` permissions.allow:
 - `mcp__plugin_vocli_vocli__talk`
 - `mcp__plugin_vocli_vocli__status`
 
